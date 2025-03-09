@@ -20,50 +20,56 @@
         let scene, camera, renderer, controls;
 
         function init() {
-            // Create Scene
-            scene = new THREE.Scene();
+    // Create Scene
+    scene = new THREE.Scene();
 
-            // Create Camera
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1, 5);
+    // Create Camera (Move further back)
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 8); // Move camera further back
 
-            // Create Renderer
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+    // Create Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-            // Add Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-            scene.add(ambientLight);
+    // Add Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+    scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-            directionalLight.position.set(5, 5, 5).normalize();
-            scene.add(directionalLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5).normalize();
+    scene.add(directionalLight);
 
-            // Load 3D Model
-            const loader = new THREE.GLTFLoader();
-            loader.load('volvo_240.glb', function (gltf) {
-                scene.add(gltf.scene);
-                animate();
-            }, undefined, function (error) {
-                console.error('Error loading 3D model:', error);
-            });
+    // Load 3D Model with Proper Scaling
+    const loader = new THREE.GLTFLoader();
+    loader.load('volvo_240.glb', function (gltf) {
+        const model = gltf.scene;
 
-            // Add Mouse Controls
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true; 
-            controls.dampingFactor = 0.05;
-            controls.screenSpacePanning = false;
-            controls.minDistance = 2;
-            controls.maxDistance = 10;
+        // Ensure model is centered and scaled properly
+        model.scale.set(1.2, 1.2, 1.2); // Adjust scale if needed
+        model.position.set(0, -0.5, 0); // Prevent clipping at bottom
 
-            // Handle Window Resize
-            window.addEventListener('resize', () => {
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-            });
-        }
+        scene.add(model);
+        animate();
+    }, undefined, function (error) {
+        console.error('Error loading 3D model:', error);
+    });
+
+    // Add Mouse Controls
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; 
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 2;
+    controls.maxDistance = 12; // Allow more zoom-out
+
+    // Handle Window Resize
+    window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    });
+}
 
         function animate() {
             requestAnimationFrame(animate);
