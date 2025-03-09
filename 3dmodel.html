@@ -23,9 +23,9 @@
     // Create Scene
     scene = new THREE.Scene();
 
-    // Create Camera (Move further back)
+    // Create Camera (Default Position, Will Be Adjusted Later)
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 2, 8); // Move camera further back
+    camera.position.set(0, 2, 5); // Default position
 
     // Create Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -40,16 +40,29 @@
     directionalLight.position.set(5, 5, 5).normalize();
     scene.add(directionalLight);
 
-    // Load 3D Model with Proper Scaling
+    // Load 3D Model with Bounding Box Centering
     const loader = new THREE.GLTFLoader();
     loader.load('volvo_240.glb', function (gltf) {
         const model = gltf.scene;
-
-        // Ensure model is centered and scaled properly
-        model.scale.set(1.2, 1.2, 1.2); // Adjust scale if needed
-        model.position.set(0, -0.5, 0); // Prevent clipping at bottom
-
         scene.add(model);
+
+        // Compute Model Bounding Box
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        // Reposition Model to Center
+        model.position.sub(center);
+
+        // Adjust Camera Distance Based on Model Size
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraDistance = Math.abs(maxDim / Math.sin(fov / 2));
+
+        camera.position.set(0, size.y / 2, cameraDistance * 1.2); // Move camera back
+        camera.lookAt(0, 0, 0);
+
+        // Start Animation
         animate();
     }, undefined, function (error) {
         console.error('Error loading 3D model:', error);
@@ -57,11 +70,11 @@
 
     // Add Mouse Controls
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; 
+    controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false;
     controls.minDistance = 2;
-    controls.maxDistance = 12; // Allow more zoom-out
+    controls.maxDistance = 15; // Allow zooming out
 
     // Handle Window Resize
     window.addEventListener('resize', () => {
